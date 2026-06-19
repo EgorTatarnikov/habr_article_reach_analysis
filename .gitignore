@@ -1,0 +1,4 @@
+__pycache__/
+.ipynb_checkpoints/
+df.csv
+df_14_days.csv
