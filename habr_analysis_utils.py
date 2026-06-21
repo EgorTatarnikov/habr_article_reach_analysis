@@ -13,22 +13,6 @@ def show_hist_boxplot(df, feature, max_value=None, bins=49, title=None):
     - Границы выбросов считаются через log1p(data) + правило 1.5 IQR.
     - Boxplot строится вручную через ax.bxp(), чтобы усы соответствовали
       логарифмическому правилу, а не стандартному IQR в исходной шкале.
-
-    Параметры:
-    df : pd.DataFrame
-        Таблица с данными.
-
-    feature : str
-        Название столбца.
-
-    max_value : int
-        Верхняя граница отображаемого диапазона по оси X.
-
-    bins : int
-        Количество корзин для гистограммы.
-
-    title : str
-        Название признака для заголовков графиков.
     """
 
     data = df[feature].dropna()
@@ -44,11 +28,16 @@ def show_hist_boxplot(df, feature, max_value=None, bins=49, title=None):
 
     if title is None:
         title = feature
-        
-    if max_value is None:
-        max_value = data.max()    
 
-    # Количество знаков после запятой для подписей
+    if max_value is None:
+        max_value = data.max()
+
+    def rotate_xticks_if_many(ax, threshold=10):
+        if len(ax.get_xticks()) > threshold:
+            ax.tick_params(axis="x", labelrotation=90)
+        else:
+            ax.tick_params(axis="x", labelrotation=0)
+
     max_abs_value = abs(data.max())
 
     if max_abs_value > 1000:
@@ -68,7 +57,6 @@ def show_hist_boxplot(df, feature, max_value=None, bins=49, title=None):
     q1, median, q3 = np.percentile(data, [25, 50, 75])
     mean_value = data.mean()
 
-    # Границы выбросов через log1p + 1.5 IQR
     log_data = np.log1p(data)
 
     q1_log = log_data.quantile(0.25)
@@ -125,6 +113,7 @@ def show_hist_boxplot(df, feature, max_value=None, bins=49, title=None):
     ax1.set_xlim(0, max_value)
     ax1.set_xticks(np.arange(0, max_value + 1, 5000))
     ax1.xaxis.set_minor_locator(AutoMinorLocator(5))
+    rotate_xticks_if_many(ax1)
 
     ax1.grid(True, which="major", axis="x", linewidth=0.8)
     ax1.grid(True, which="minor", axis="x", linewidth=0.4, alpha=0.4)
@@ -183,6 +172,7 @@ def show_hist_boxplot(df, feature, max_value=None, bins=49, title=None):
 
     ax2.set_xticks(np.arange(0, max_value + 1, 5000))
     ax2.xaxis.set_minor_locator(AutoMinorLocator(5))
+    rotate_xticks_if_many(ax2)
 
     ax2.grid(True, which="major", axis="x", linewidth=0.8)
     ax2.grid(True, which="minor", axis="x", linewidth=0.4, alpha=0.4)
@@ -231,7 +221,6 @@ def show_hist_boxplot(df, feature, max_value=None, bins=49, title=None):
             rotation=90
         )
 
-    # Среднее значение
     ax2.annotate(
         f"Среднее: {mean_value:.{rnd}f}",
         xy=(mean_value, 0),
@@ -243,7 +232,6 @@ def show_hist_boxplot(df, feature, max_value=None, bins=49, title=None):
         rotation=90
     )
 
-    # Количество выбросов
     ax2.annotate(
         f"Количество выбросов: {len(outliers)}",
         xy=(0.1, -0.5),
@@ -254,7 +242,7 @@ def show_hist_boxplot(df, feature, max_value=None, bins=49, title=None):
         color="purple"
     )
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 1, 0.97])
     plt.show()
     
 def format_k(value):
